@@ -117,8 +117,8 @@ isa_plot = [isa_result_dict[label] for label in plot_order]
 
 #  Plot
 plt.figure(figsize=(10, 6))
-plt.plot(plot_order, aer_plot, "go--", label="🧠 Ideal Simulator (Aer)")
-plt.plot(plot_order, isa_plot, "ro-", label="⚛️ Real Quantum Hardware (ISA)")
+plt.plot(plot_order, aer_plot, "go--", label=" Ideal Simulator (Aer)")
+plt.plot(plot_order, isa_plot, "ro-", label=" Real Quantum Hardware (ISA)")
 
 plt.xlabel("Observable")
 plt.ylabel("Expectation Value")
