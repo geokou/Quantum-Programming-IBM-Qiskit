@@ -39,7 +39,7 @@ print(len(operator_strings))
  
 operators = [SparsePauliOp(operator) for operator in operator_strings]
 
-#Step 3
+# Step 3
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit_ibm_runtime import QiskitRuntimeService
  
@@ -80,7 +80,7 @@ job = estimator.run([(isa_circuit, isa_operators_list)])
 job_id = job.job_id()
 print(job_id)
 
-#Step 4
+# Step 4
 import matplotlib.pyplot as plt
 # data
 data = list(range(1, len(operators) + 1))  # Distance between the Z operators
