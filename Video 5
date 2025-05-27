@@ -1,0 +1,165 @@
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Statevector, SparsePauliOp
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Manual circuit builder 
+def create_circuit(theta):
+    qc = QuantumCircuit(2)
+    qc.ry(theta[0], 0)
+    qc.ry(theta[1], 1)
+    qc.cx(0, 1)
+    qc.ry(theta[2], 0)
+    qc.ry(theta[3], 1)
+    return qc
+
+# Observable: ZI + IZ + 0.5 * ZZ
+H = SparsePauliOp(["ZI", "IZ", "ZZ"], coeffs=[1.0, 1.0, 0.5])
+
+# Function to compute energy (⟨ψ|H|ψ⟩)
+def compute_energy(qc, H):
+    psi = Statevector.from_instruction(qc)
+    return np.real(psi.expectation_value(H))
+
+# Try two example angles
+theta1 = [0, 0.5, 0.5, 0.1]
+theta2 = [0.2, 0.1, 0.4, 0.8]
+
+qc1 = create_circuit(theta1)
+qc2 = create_circuit(theta2)
+
+energy1 = compute_energy(qc1, H)
+energy2 = compute_energy(qc2, H)
+
+print("Energy for psi1:", energy1)
+print("Energy for psi2:", energy2)
+
+# Sweep angle and plot
+angles = np.linspace(0, np.pi, 20)
+energies = []
+
+for t in angles:
+    theta = [t, 0.5, 0.5, 0.1] 
+    qc = create_circuit(theta)
+    E = compute_energy(qc, H)
+    energies.append(E)
+
+plt.plot(angles / np.pi, energies, '-o')
+plt.xlabel("θ (π units)")
+plt.ylabel("Energy ⟨H⟩")
+plt.title("Energy vs. Rotation Angle (No Primitives)")
+plt.grid(True)
+plt.show()
+
+
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer.primitives import Sampler, Estimator
+from qiskit.circuit.library import RealAmplitudes
+from qiskit.quantum_info import SparsePauliOp
+import matplotlib.pyplot as plt
+import numpy as np
+
+psi1 = RealAmplitudes(num_qubits=2, reps=1)
+psi2 = RealAmplitudes(num_qubits=2, reps=1)
+
+theta1 = [0, 0.5, 0.5, 0.1]
+theta2 = [0.2, 0.1, 0.4, 0.8]
+
+H = SparsePauliOp(["ZI", "IZ", "ZZ"], coeffs=[1.0, 1.0, 0.5])
+
+
+# Circuits
+psi1 = RealAmplitudes(num_qubits=2, reps=1)
+psi2 = RealAmplitudes(num_qubits=2, reps=1)
+
+# Parameters 
+theta1 = [0, 0.5, 0.5, 0.1]
+theta2 = [0.2, 0.1, 0.4, 0.8]
+
+# Observable: a simple Hamiltonian
+H = SparsePauliOp(["ZI", "IZ", "ZZ"], coeffs=[1.0, 1.0, 0.5])
+
+# Estimator
+estimator = Estimator()
+
+job = estimator.run(
+    circuits=[psi1, psi2],
+    observables=[H, H],
+    parameter_values=[theta1, theta2]
+)
+
+result = job.result()
+
+print("Energy for psi1:", result.values[0])
+print("Energy for psi2:", result.values[1])
+angles = np.linspace(0, np.pi, 20)
+energies = []
+
+for t in angles:
+    theta = [t, 0.5, 0.5, 0.1]
+    result = estimator.run(
+        circuits=[psi1],
+        observables=[H],
+        parameter_values=[theta]
+    ).result()
+    energies.append(result.values[0])
+
+plt.plot(angles / np.pi, energies, '-o')
+plt.xlabel("θ (π units)")
+plt.ylabel("Energy ⟨H⟩")
+plt.title("Energy vs. Rotation Angle")
+plt.grid(True)
+plt.show()
+
+
+
+# Hamiltonian: ZI + IZ + 0.5 ZZ
+H = SparsePauliOp(["ZI", "IZ", "ZZ"], coeffs=[1.0, 1.0, 0.5])
+
+# Parameterized circuit
+psi = RealAmplitudes(num_qubits=2, reps=1)
+
+# Sweep angles
+angles = np.linspace(0, np.pi, 20)
+
+# Lists to hold results
+energies_primitives = []
+energies_manual = []
+
+# Estimator primitive
+estimator = Estimator()
+
+for t in angles:
+    theta = [t, 0.5, 0.5, 0.1]
+
+    # --- 1. Using Primitives ---
+    result = estimator.run(
+        circuits=[psi],
+        observables=[H],
+        parameter_values=[theta]
+    ).result()
+    energies_primitives.append(result.values[0])
+
+    # --- 2. Manual Statevector Method ---
+    qc = QuantumCircuit(2)
+    qc.ry(theta[0], 0)
+    qc.ry(theta[1], 1)
+    qc.cx(0, 1)
+    qc.ry(theta[2], 0)
+    qc.ry(theta[3], 1)
+    sv = Statevector.from_instruction(qc)
+    energy = np.real(sv.expectation_value(H))
+    energies_manual.append(energy)
+
+# Plot both curves
+plt.plot(angles / np.pi, energies_primitives, 'o-', label='Estimator (Primitives)')
+plt.plot(angles / np.pi, energies_manual, 's--', label='Manual (Statevector)')
+
+# Labels and legend
+plt.xlabel("θ (π units)")
+plt.ylabel("Energy ⟨H⟩")
+plt.title("Energy vs. Rotation Angle\nPrimitives vs Manual")
+plt.legend()
+plt.grid(True)
+plt.show()
+
